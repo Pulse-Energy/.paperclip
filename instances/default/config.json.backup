@@ -1,0 +1,59 @@
+{
+  "$meta": {
+    "version": 1,
+    "updatedAt": "2026-05-25T13:35:00.172Z",
+    "source": "configure"
+  },
+  "database": {
+    "mode": "embedded-postgres",
+    "embeddedPostgresDataDir": "/Users/tonystark/.paperclip/instances/default/db",
+    "embeddedPostgresPort": 54329,
+    "backup": {
+      "enabled": true,
+      "intervalMinutes": 60,
+      "retentionDays": 30,
+      "dir": "/Users/tonystark/.paperclip/instances/default/data/backups"
+    }
+  },
+  "logging": {
+    "mode": "file",
+    "logDir": "/Users/tonystark/.paperclip/instances/default/logs"
+  },
+  "server": {
+    "deploymentMode": "local_trusted",
+    "exposure": "private",
+    "bind": "loopback",
+    "host": "127.0.0.1",
+    "port": 3100,
+    "allowedHostnames": [
+      "reset-decathlon-pacifist.ngrok-free.dev"
+    ],
+    "serveUi": true
+  },
+  "telemetry": {
+    "enabled": true
+  },
+  "auth": {
+    "baseUrlMode": "auto",
+    "disableSignUp": false
+  },
+  "storage": {
+    "provider": "local_disk",
+    "localDisk": {
+      "baseDir": "/Users/tonystark/.paperclip/instances/default/data/storage"
+    },
+    "s3": {
+      "bucket": "paperclip",
+      "region": "us-east-1",
+      "prefix": "",
+      "forcePathStyle": false
+    }
+  },
+  "secrets": {
+    "provider": "local_encrypted",
+    "strictMode": false,
+    "localEncrypted": {
+      "keyFilePath": "/Users/tonystark/.paperclip/instances/default/secrets/master.key"
+    }
+  }
+}
