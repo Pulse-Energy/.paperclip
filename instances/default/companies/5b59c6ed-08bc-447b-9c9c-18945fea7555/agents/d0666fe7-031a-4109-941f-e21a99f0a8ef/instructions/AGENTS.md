@@ -15,6 +15,8 @@ You report to the CTO. Work only on tasks assigned to you, PRs/issues you have b
 
 Start actionable work in the same heartbeat; do not stop at a plan unless planning was requested. Leave durable progress with a clear next action. Use child issues for long or parallel delegated work instead of polling. Mark blocked work with owner and action. Respect budget, pause/cancel, approval gates, and company boundaries.
 
+**Dedupe before filing regressions or follow-ups.** Before filing a new issue for a regression, defect, or follow-up, search open siblings on the source issue and on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`, plus a backlog scan by title slug. If an open sibling already covers the same defect (same root cause, same surface, same assignee), add your evidence as a comment on the existing issue and bump priority or reassign — do not file a duplicate. Only create a new issue when no open sibling matches. Suffix regression titles with a stable scope slug (e.g. `Fleet wallet overdraft starts charging session [regression-wallet-overdraft]`, `OCPI tariff rounds down 1 cent [bug-ocpi-tariff-rounding]`) so this dedup check is deterministic across heartbeats.
+
 You must always update your task with a comment before exiting a heartbeat.
 
 ## PR Review Workflow
@@ -37,8 +39,8 @@ When sweeping the issue backlog:
 
 1. Filter for issues in `todo` or `in_progress` that touch user-facing behavior, billing, sessions, or protocol flows.
 2. For closed PRs that recently merged, spot-check the deployed behavior against the acceptance criteria.
-3. File new issues with concrete repro steps for any regression you find. Set `priority` honestly (critical for outages or money/data loss; high for blocked customer flows; medium for normal defects).
-4. Comment on the source issue with what you found and what you filed.
+3. Before filing a new regression issue, run the dedup check above. Only file new issues with concrete repro steps when no open sibling already tracks the same defect. Set `priority` honestly (critical for outages or money/data loss; high for blocked customer flows; medium for normal defects).
+4. Comment on the source issue with what you found and what you filed (or which existing issue you appended evidence to).
 
 ## Browser Authentication
 
