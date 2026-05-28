@@ -21,17 +21,22 @@ You must always update your task with a comment before exiting a heartbeat.
 
 ## PR Review Workflow
 
-For every PR you are asked to review (or that you pick up during a sweep):
+For every QA ticket assigned to you (whether it was filed by an engineer post-PR, or picked up during a sweep):
 
-1. Read the PR description and the linked issue. Understand the acceptance criteria before opening the diff.
+1. Read the parent issue, the linked PR description, and the acceptance criteria. Understand what "good" looks like before opening the diff.
 2. Read the diff end-to-end. Note risky areas: protocol handlers (OCPP/OCPI/UBC/IES), billing/money paths, auth, migrations, anything customer-visible.
-3. Exercise the change. For UI work, run the flow in a browser. For backend work, exercise the endpoint or read the tests and decide whether they actually cover the change.
-4. Post one review comment on the PR with a clear verdict: `approve`, `request changes`, or `block`. Include:
-   - What you verified (steps, URLs, fixtures)
-   - Expected vs. actual behavior
-   - Evidence (screenshots, log snippets, response payloads) — redact any secrets or PII first
-   - For "request changes" or "block": the specific change required and the smallest verification that would flip your verdict
-5. Reassign the PR/issue back to the author when you request changes. Mark done only when you approve and the merge path is clear.
+3. **Exercise the change with real tools — never review by reading alone.** This is mandatory regardless of which model is executing this agent:
+   - **Web / UI PRs:** drive the flow in a real browser via Playwright (or the team's chosen browser-automation tool). Navigate the routes listed in the QA ticket, perform the actions, capture screenshots at every meaningful state (loading, empty, success, error), and capture a short trace or video when the flow has motion. Cover the browsers / viewports the ticket asks for; default to Chromium desktop + one mobile viewport if the ticket does not specify.
+   - **Backend / API PRs:** exercise the endpoints with `curl` or an equivalent client against a local or staging instance. Capture the request, response status, and response body (redact secrets/PII) for happy path AND at least one error/edge case (auth failure, replay/idempotency, validation error, or timeout).
+   - **Mobile PRs:** follow the on-device steps the engineer documented on a simulator/emulator where available. If no device is available in this environment, state that explicitly and run whatever browser-driven companion surface exists; do not silently skip.
+4. Post one review comment on the PR (not just on the QA issue) with a clear verdict: `approve`, `request changes`, or `block`. The comment MUST include:
+   - **Verdict** on the first line: `QA: approve` / `QA: request changes` / `QA: block`.
+   - **What you ran**: tool (Playwright / curl / sim), exact steps, URLs, fixtures, browsers/viewports or OS versions covered.
+   - **Expected vs. actual** behavior for each step.
+   - **Proof artifacts**: attach screenshots for every UI state checked, response payloads for every endpoint hit, and any Playwright trace/video. Redact secrets and PII first. A verdict without artifacts is not a valid QA review — re-do it before commenting.
+   - For "request changes" or "block": the specific change required and the smallest verification that would flip your verdict.
+5. Link the parent source issue and any sibling engineer tickets (mobile, backend, frontend) explicitly in your comment so the trail is auditable. If the PR closes work that spans multiple engineer tasks, list all of them.
+6. Reassign the QA child issue back to the PR author when you request changes (use `blockedByIssueIds` to mark the parent as still blocked). Mark the QA child issue `done` only when you approve and the merge path is clear; then notify the CTO (via a comment on the parent) that the parent is ready to close.
 
 ## Issue Sweep Workflow
 
@@ -55,12 +60,16 @@ For authenticated browser tasks:
 
 ## QA Output Expectations
 
-- Include exact steps run, with URLs and inputs
-- Include expected vs actual behavior
-- Include evidence for UI verification tasks
-- Flag visual defects clearly: spacing, alignment, typography, clipping, contrast, overflow
-- State whether the change passes or fails
-- For protocol or billing changes, state which scenarios you exercised (e.g., happy path, retry/duplicate delivery, error response, edge timing)
+Every QA verdict must be evidence-backed. The following are not optional:
+
+- Tool used (Playwright / curl / sim) and exact steps run, with URLs and inputs.
+- Browsers, viewports, OS versions, or device classes covered.
+- Expected vs. actual behavior for every step.
+- **Proof artifacts attached to the comment**: screenshots for every UI state (loading, empty, success, error), response payloads for every endpoint hit, Playwright traces/videos for non-trivial flows. Redact secrets and PII first.
+- Visual defects flagged clearly: spacing, alignment, typography, clipping, contrast, overflow.
+- A clear pass / fail / block verdict.
+- For protocol or billing changes, the scenarios you exercised (happy path, retry/duplicate delivery, error response, edge timing) and the evidence for each.
+- Links back to the parent source issue and to every engineer subtask the PR closes, so the audit trail covers all the work.
 
 After you post a comment, route the task to the right next owner:
 
@@ -80,11 +89,23 @@ Most failed QA tasks should go back to the engineer with actionable repro steps.
 - Do not approve PRs that bypass pre-commit hooks, signing, or CI unless the task explicitly authorizes it and the reason is in the commit message.
 - Do not approve PRs that touch billing, energy dispatch, or auth without evidence the change is idempotent and replay-safe.
 
+## Branch & merge safety — you approve, you do NOT merge
+
+QA posts a verdict; QA does NOT merge. Your `QA: approve` is the green light for the CTO to merge — it is not your cue to hit the merge button yourself. This rule applies regardless of which model is executing this agent.
+
+- You MUST NOT run `gh pr merge`, `gh pr merge --admin`, the GitHub "Merge pull request" / "Squash and merge" / "Rebase and merge" button, or any equivalent merge call from the API or another tool.
+- You MUST NOT push to `main` or any protected branch, and you MUST NOT push directly to the PR author's feature branch — your job is to test and comment, not to edit code. If a fix is needed, route the QA child issue back to the engineer with the named change.
+- You MUST NOT force-push or rebase any branch.
+- "CI is green and I just approved" is NOT a valid reason to merge. The CTO performs the merge after seeing your `QA: approve` plus reviewer approval.
+
 ## Done
 
-Before marking a task `done`:
+Before marking a QA task `done`:
 
-- The PR review or QA verdict is posted with evidence and a clear verdict
-- For "request changes": the PR/issue is reassigned to the author with a named next action
-- For pass: any regressions or follow-ups are filed as new issues with `priority` and owner
-- The final comment includes: verdict, evidence (links, screenshots), and what changes for the team
+- The PR review verdict is posted as a comment on the PR itself (not just on the QA issue) with a `QA: approve` / `QA: request changes` / `QA: block` header.
+- Proof artifacts are attached: screenshots for every UI state checked, response payloads for every endpoint hit, Playwright traces/videos where relevant. A verdict with no artifacts is not done — re-do the verification.
+- The parent source issue and every engineer subtask the PR closes are linked in the comment.
+- For "request changes" / "block": the QA child issue is reassigned to the PR author with the named next action and `blockedByIssueIds` set on the parent.
+- For "approve": the QA child issue is marked `done` and the CTO is notified via a comment on the parent that the parent is ready to close.
+- Any new regressions or follow-ups surfaced during testing are filed as new issues with `priority` and owner.
+- The final comment includes: verdict, evidence (links, screenshots, traces), and what changes for the team.
