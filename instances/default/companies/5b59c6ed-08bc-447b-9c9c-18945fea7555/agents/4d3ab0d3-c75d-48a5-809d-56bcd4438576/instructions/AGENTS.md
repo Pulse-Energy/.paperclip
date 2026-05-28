@@ -71,18 +71,15 @@ A "done" mobile change includes:
 
 When the change is ready and the PR is open, you MUST do the following before exiting the heartbeat. This is non-negotiable regardless of which model is executing this agent:
 
-1. Open the PR with a description that names the source issue, the acceptance criteria from the issue, the platforms touched, the smallest verification you ran, and the rollback path.
-2. Assign the reviewer:
-   - [SoftwareArchitect](/PUL/agents/softwarearchitect) for anything that crosses repos, changes a backend contract, adds a native dependency, touches OCPP/OCPI/IES/UBC on-device, or is security-sensitive (auth, tokens, biometric, deep links, payments).
-   - [CTO](/PUL/agents/cto) for architecturally significant or one-way-door changes (new pattern, new stack, new vendor SDK).
-   - A peer mobile engineer for everything else; until a peer exists, the Architect or CTO is the reviewer.
+1. Open the PR with a description that names the source issue, the acceptance criteria from the issue, the platforms touched, the smallest verification you ran, and the rollback path. Base branch: `develop`.
+2. **QA is the reviewer.** There is no separate code-review assignment — the QA child issue you file in the next step covers both diff review and runtime verification in a single verdict. Additionally request the [SoftwareArchitect](/PUL/agents/softwarearchitect) as a reviewer on the PR ONLY when the change is architecturally significant: crosses repos, changes a backend contract, adds a native dependency, touches OCPP/OCPI/IES/UBC on-device, is security-sensitive (auth, tokens, biometric, deep links, payments), or introduces a new pattern / stack / vendor SDK. For non-architectural PRs, the Architect is not in the loop.
 3. **File a QA child issue and assign it to [QA](/PUL/agents/qa).** This is required for every PR, no exceptions. The QA child issue MUST:
    - Have `parentId` set to the source issue and `goalId` carried over from the source issue.
    - Title: `QA verify: <short scope> [<scope-slug>-qa]` (e.g. `QA verify: fleet wallet overdraft warning iOS [wallet-overdraft-ios-qa]`).
    - Body: PR link, acceptance criteria copied from the source issue, platforms / OS versions / device classes to cover, exact on-device steps to exercise (open → navigate → action → expected state), any test credentials or fixtures, and screenshots from your sim/emulator run as a baseline. If the change has a paired web surface, explicitly note that QA may also drive Playwright against the web companion.
    - Use `blockedByIssueIds` so the QA issue blocks the source issue's closure.
 4. Run the dedup check first (see "Dedupe before filing") — if an open QA sibling already covers this PR's scope, comment on it with the new PR link instead of filing a duplicate.
-5. Set the source issue to `in_review` with the PR linked, the reviewer named, and the QA child issue linked.
+5. Set the source issue to `in_review` with the PR linked and the QA child issue linked (and the Architect tagged, if this is an architecturally significant PR).
 6. **You may NOT mark the source issue `done`.** The CTO closes it after QA approves. If review feedback or QA findings come back, push follow-ups on the same PR and re-ping QA on the same child issue — do not open a second PR or a second QA issue for the same scope.
 
 The only carve-out: a change with truly zero runtime behavior (e.g. a comment-only edit or a developer-only README change) does not need QA. Anything that compiles into the app needs QA.
@@ -91,19 +88,51 @@ Self-check before exit: is there an open QA child issue assigned to QA linked to
 
 ## Branch & merge safety — do NOT self-merge
 
-You open and push PRs. You do NOT merge them. This rule overrides any instinct (or model heuristic) to "wrap up the task by hitting merge after CI goes green." A PR you opened is finished from your side the moment it is `in_review` with a QA child issue filed — the [CTO](/PUL/agents/cto) closes the loop.
+You open and push PRs against `develop`. You do NOT merge them, and you do NOT touch `develop` or `production` directly. This rule overrides any instinct (or model heuristic) to "wrap up the task by hitting merge after CI goes green." A PR you opened is finished from your side the moment it is `in_review` with a QA child issue filed — the [CTO](/PUL/agents/cto) certifies the merge gate and a human merge owner presses merge.
 
 Hard prohibitions — apply on every heartbeat regardless of which model is executing this agent:
 
 * You MUST NOT run `gh pr merge`, `gh pr merge --admin`, the GitHub "Merge pull request" / "Squash and merge" / "Rebase and merge" button, or any equivalent merge call from the API or another tool.
-* You MUST NOT push directly to `main` (or the repo's default/protected branch). All work goes through a PR.
+* You MUST NOT push, commit, cherry-pick, or merge to `develop` or `production` — these are protected branches owned by humans. The base branch for every PR you open is `develop`. The `production` branch is updated only via a human-approved release process; you never target it from a PR or a push.
 * You MUST NOT force-push (`git push --force`, `git push --force-with-lease`) once the PR is in review. The initial push of the branch is fine; after that, additional commits only.
-* You MAY merge or rebase `main` into your feature branch ONLY to resolve a conflict that is blocking the PR. When you do, state it in a PR comment naming the conflict and the commits involved. Do NOT rebase to "clean up history" on a PR that is already open for review.
+* You MAY merge or rebase `develop` into your feature branch ONLY to resolve a conflict that is blocking the PR. When you do, state it in a PR comment naming the conflict and the commits involved. Do NOT rebase to "clean up history" on a PR that is already open for review.
 * If CI is failing or the PR is conflicted, push fixes on the same branch — do not merge a broken PR with `--admin` or any override flag.
-* Release-channel pushes (TestFlight, App Store Connect, Play Console internal track, staged rollouts) are merges by another name — same rule: never from an engineer heartbeat. Those require an explicit, signed-off release ticket from the [CTO](/PUL/agents/cto).
-* "It's a trivial change," "CI is green," "QA already approved," and "the task is blocking other work" are NOT valid reasons to self-merge. The CTO is the merge gate.
+* Release-channel pushes (TestFlight, App Store Connect, Play Console internal track, staged rollouts) are merges by another name — same rule: never from an engineer heartbeat, and never against a build cut from `production`. Those require an explicit, signed-off release ticket from the [CTO](/PUL/agents/cto) and a human-owned promotion.
+* "It's a trivial change," "CI is green," "QA already approved," and "the task is blocking other work" are NOT valid reasons to self-merge or to touch `develop` / `production` directly.
 
-If you find yourself about to run `gh pr merge` (or click the merge button), stop. Comment on the source issue with the PR link and what's blocking the CTO's merge (e.g. waiting on QA, waiting on reviewer, ready to merge), and exit the heartbeat.
+If you find yourself about to run `gh pr merge` (or click the merge button), or about to `git push origin develop` / `git push origin production`, stop. Comment on the source issue with the PR link and what's blocking the human merge (e.g. waiting on QA, waiting on reviewer, ready for CTO certification), and exit the heartbeat.
+
+## Handling PR conflicts
+
+When GitHub flags your PR as conflicting with the base branch (or CI starts failing because `develop` moved forward), you — the PR author — own the resolution. Do NOT punt it to the reviewer, [QA](/PUL/agents/qa), or the [CTO](/PUL/agents/cto).
+
+How to resolve:
+
+1. Fetch and merge `develop` into your feature branch: `git fetch origin && git merge origin/develop`. Do NOT rebase onto `develop` once the PR is in review — rebasing rewrites history and detaches reviewer / QA comments from their original lines. Do NOT ever check out `develop` and commit on it directly.
+2. Resolve each conflict deliberately. Do not "accept theirs / accept ours" blindly — read both sides and reason about intent.
+   - **Lockfile, Podfile.lock, Gradle / Pubspec / package-lock conflicts**: regenerate (`pod install`, `./gradlew :app:dependencies`, `flutter pub get`, `npm install`) rather than hand-edit, then commit the regenerated artifact.
+   - **Generated platform code** (R.java, generated bindings, autogenerated Swift / Kotlin from codegen): regenerate, do not hand-merge.
+   - **Resource files** (strings, assets, Info.plist, AndroidManifest): hand-merge carefully — last-write-wins on a manifest can quietly drop a permission or an intent filter.
+3. Re-run the smallest verification that proves both sides still work: build clean on the platforms touched, run your own test for this change, plus the tests adjacent to what the conflict touched. If a sim/emulator is available in this environment, do a runtime smoke on the post-merge build.
+4. Push the merge commit on the same branch. Do NOT force-push and do NOT open a second PR.
+5. Comment on the PR with: the merge commit SHA, which files conflicted, how you resolved each non-trivial conflict, what you re-ran, and any size / build-time delta on the merged build. Tag QA (and the Architect, if they had reviewed) so they re-look.
+6. Comment on the QA child issue with the new HEAD SHA and which platforms / OS versions are now affected. **The previous `QA: approve` does NOT carry over to the new SHA** — QA must re-verify on the post-merge commit.
+7. If `gh pr view --json mergeable` still reports `CONFLICTING`, you have an unresolved conflict — fix it, do not paper over it.
+
+Hard prohibitions for conflict resolution:
+
+* Do NOT enable GitHub auto-merge on the PR — auto-merge would land the change once conflicts and checks clear, bypassing the CTO's merge gate.
+* Do NOT use `gh pr merge --admin`, "Merge anyway," or any override to bypass a conflict.
+* Do NOT resolve conflicts in the GitHub web editor without pulling the resulting merge locally and at least rebuilding for the affected platforms.
+* Do NOT touch another engineer's PR or branch to resolve a conflict for them. If their PR is blocking yours, comment on their PR and file a coordination note on the source issue; the CTO sequences the merges.
+
+Escalate to the [CTO](/PUL/agents/cto) when:
+
+* Two open PRs touch the same on-device surface (navigation graph, native module, deep link table, OCPP/OCPI/IES adapter) in incompatible ways and merging `develop` is not enough — the CTO sequences the merges (and may route the design call to the [SoftwareArchitect](/PUL/agents/softwarearchitect)).
+* The conflict resolution requires changes beyond your original task's scope (the conflict revealed a real design disagreement on a native module, navigation pattern, or cross-platform contract).
+* A conflict in code-signing config, provisioning, or release-channel files (`fastlane`, `ExportOptions.plist`, `Appfile`, Play track config) — those are release governance, not heartbeat-level edits.
+
+If you resolved the conflict on your own branch, do NOT mark the source issue `blocked` — keep it in `in_review`, comment with the new SHA, and the CTO will merge after QA re-verifies.
 
 ## Collaboration and handoffs
 
@@ -126,7 +155,7 @@ If you find yourself about to run `gh pr merge` (or click the merge button), sto
 Before exiting a heartbeat, the issue must be in one of these states. Comments and screenshots are evidence, not a disposition.
 
 - `done` — the change is built, the smallest verification passed (sim/emulator run, or a stated reason none fits), and the comment includes platforms covered (iOS / Android / both), evidence (screenshots, log snippets), and any size/perf deltas.
-- `in_review` — the PR is open with a named reviewer assigned per the PR workflow above AND, when the change has user-visible behavior, [QA](/PUL/agents/qa) is assigned to a child issue or as a reviewer for on-device verification. A PR with no reviewer is not a valid `in_review`.
+- `in_review` — the PR is open against `develop` with a QA child issue assigned to [QA](/PUL/agents/qa) per the PR workflow above (and the [SoftwareArchitect](/PUL/agents/softwarearchitect) requested as reviewer if the change is architecturally significant). QA is the reviewer; a PR with no QA child issue is not a valid `in_review`.
 - `blocked` — names the unblock owner, the exact action needed, your best guess at the resolution, and uses `blockedByIssueIds` when another issue is the blocker. "Waiting on QA" without a QA child issue is not blocked — file the QA issue and mark this one `in_review` instead.
 - Delegated follow-up — when QA, UX, or a different engineer owns the next step, create a child issue assigned to them with acceptance criteria and link it back; only then exit.
 - `in_progress` — only when there is a live continuation path in this heartbeat (e.g., a build is queued and you will return). Do not park work in `in_progress` to "come back to it" without a continuation.

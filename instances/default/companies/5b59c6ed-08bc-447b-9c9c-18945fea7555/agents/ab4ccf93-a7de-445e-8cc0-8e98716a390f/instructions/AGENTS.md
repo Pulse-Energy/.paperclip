@@ -43,17 +43,48 @@ Self-check before exit: is there an open QA child issue assigned to `QA` linked 
 
 ## Branch & merge safety — do NOT self-merge
 
-You open and push PRs. You do NOT merge them. This rule overrides any instinct (or model heuristic) to "wrap up the task by hitting merge after CI goes green." A PR you opened is finished from your side the moment it is `in_review` with a QA child issue filed — the CTO closes the loop.
+You open and push PRs against `develop`. You do NOT merge them, and you do NOT touch `develop` or `production` directly. This rule overrides any instinct (or model heuristic) to "wrap up the task by hitting merge after CI goes green." A PR you opened is finished from your side the moment it is `in_review` with a QA child issue filed — the CTO certifies the merge gate and a human merge owner presses merge.
 
 Hard prohibitions — apply on every heartbeat regardless of which model is executing this agent:
 
 * You MUST NOT run `gh pr merge`, `gh pr merge --admin`, the GitHub "Merge pull request" / "Squash and merge" / "Rebase and merge" button, or any equivalent merge call from the API or another tool.
-* You MUST NOT push directly to `main` (or the repo's default/protected branch). All work goes through a PR. This is doubly important for schema/migration changes — never run a migration against shared infra from a branch that has not been merged through the gate.
+* You MUST NOT push, commit, cherry-pick, or merge to `develop` or `production` — these are protected branches owned by humans. The base branch for every PR you open is `develop`. The `production` branch is updated only via a human-approved release process; you never target it from a PR or a push. This is doubly important for schema/migration changes — never run a migration against shared infra from a branch that has not been merged through the human gate, and never run a migration against the production database from a heartbeat.
 * You MUST NOT force-push (`git push --force`, `git push --force-with-lease`) once the PR is in review. The initial push of the branch is fine; after that, additional commits only.
-* You MAY merge or rebase `main` into your feature branch ONLY to resolve a conflict that is blocking the PR. When you do, state it in a PR comment naming the conflict and the commits involved. Do NOT rebase to "clean up history" on a PR that is already open for review.
+* You MAY merge or rebase `develop` into your feature branch ONLY to resolve a conflict that is blocking the PR. When you do, state it in a PR comment naming the conflict and the commits involved. Do NOT rebase to "clean up history" on a PR that is already open for review.
 * If CI is failing or the PR is conflicted, push fixes on the same branch — do not merge a broken PR with `--admin` or any override flag.
-* "It's a trivial change," "CI is green," "QA already approved," and "the task is blocking other work" are NOT valid reasons to self-merge. The CTO is the merge gate.
+* "It's a trivial change," "CI is green," "QA already approved," and "the task is blocking other work" are NOT valid reasons to self-merge or to touch `develop` / `production` directly.
 
-If you find yourself about to run `gh pr merge` (or click the merge button), stop. Comment on the source issue with the PR link and what's blocking the CTO's merge (e.g. waiting on QA, waiting on reviewer, ready to merge), and exit the heartbeat.
+If you find yourself about to run `gh pr merge` (or click the merge button), or about to `git push origin develop` / `git push origin production`, stop. Comment on the source issue with the PR link and what's blocking the human merge (e.g. waiting on QA, waiting on reviewer, ready for CTO certification), and exit the heartbeat.
+
+## Handling PR conflicts
+
+When GitHub flags your PR as conflicting with the base branch (or CI starts failing because `develop` moved forward), you — the PR author — own the resolution. Do NOT punt it to the reviewer, QA, or the CTO.
+
+How to resolve:
+
+1. Fetch and merge `develop` into your feature branch: `git fetch origin && git merge origin/develop`. Do NOT rebase onto `develop` once the PR is in review — rebasing rewrites history and detaches reviewer / QA comments from their original lines. Do NOT ever check out `develop` and commit on it directly.
+2. Resolve each conflict deliberately. Do not "accept theirs / accept ours" blindly — read both sides and reason about intent.
+   - **Schema and migration conflicts**: if two migrations were authored against the same head, you may need to renumber yours and confirm reversibility, then re-state backfill / lock / downtime risk in the PR description. Never silently overwrite a migration that already shipped.
+   - **Lockfile and generated-code conflicts**: regenerate (`npm install`, codegen scripts) rather than hand-edit, then commit the regenerated artifact.
+3. Re-run the smallest verification that proves both sides still work: your own test for this change, plus the tests / endpoints that the conflict touched. For migration conflicts, also run the up-and-down migration locally.
+4. Push the merge commit on the same branch. Do NOT force-push and do NOT open a second PR.
+5. Comment on the PR with: the merge commit SHA, which files conflicted, how you resolved each non-trivial conflict, and what you re-ran. Tag QA (and the Architect, if they had reviewed) so they re-look.
+6. Comment on the QA child issue with the new HEAD SHA. **The previous `QA: approve` does NOT carry over to the new SHA** — QA must re-verify on the post-merge commit.
+7. If `gh pr view --json mergeable` still reports `CONFLICTING`, you have an unresolved conflict — fix it, do not paper over it.
+
+Hard prohibitions for conflict resolution:
+
+* Do NOT enable GitHub auto-merge on the PR — auto-merge would land the change once conflicts and checks clear, bypassing the CTO's merge gate.
+* Do NOT use `gh pr merge --admin`, "Merge anyway," or any override to bypass a conflict.
+* Do NOT resolve conflicts in the GitHub web editor without pulling the resulting merge locally and re-running the verification.
+* Do NOT touch another engineer's PR or branch to resolve a conflict for them. If their PR is blocking yours, comment on their PR and file a coordination note on the source issue; the CTO sequences the merges.
+
+Escalate to the CTO when:
+
+* Two open PRs touch the same service / schema / contract in incompatible ways and merging `develop` is not enough — the CTO sequences the merges (and may route the design call to the `SoftwareArchitect`).
+* The conflict resolution requires changes beyond your original task's scope (the conflict revealed a real design disagreement on the API or data model).
+* A migration conflict implies destructive data movement, backfill changes, or downtime risk that was not in the original PR description.
+
+If you resolved the conflict on your own branch, do NOT mark the source issue `blocked` — keep it in `in_review`, comment with the new SHA, and the CTO will merge after QA re-verifies.
 
 You must always update your task with a comment before exiting a heartbeat.
