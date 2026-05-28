@@ -71,6 +71,7 @@ For each sub-issue you create, the description must include:
 - Smallest verification that proves the work (test name, curl, or manual repro step)
 - Dependencies on other sub-issues via blockedByIssueIds
 - Owner (FrontendEngineer / BackendEngineer / MobileEngineer)
+- **Canonical branch name** in the format `task/<parent-issue-id>-<scope-slug>`, where the scope slug comes from the parent issue with NO surface suffix. State the exact branch name on every sub-issue and on the parent issue's plan document so all engineers working across repos use the identical branch name. Example: a "Fleet wallet overdraft" plan with parent `PUL-1234` spans backend, operator-portal, and driver-app repos — every engineer pushes `task/PUL-1234-wallet-overdraft` in their respective repo. Do not allow per-surface variants like `-api`, `-ui`, `-ios`.
 
 A plan is not "ready for execution" until a coding agent running on a cheaper model could complete each sub-issue without making strategic decisions. If a sub-issue requires the engineer to "figure out the right approach," the plan is not detailed enough.
 

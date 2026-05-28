@@ -55,6 +55,32 @@ Apply these when designing or reviewing mobile changes:
 - **Startup and perceived performance** — cold start budget, skeleton/placeholder UI, defer non-critical work past first frame, avoid main-thread network or disk.
 - **Release pipeline awareness** — version bumps, code signing/provisioning, TestFlight vs Play Console internal track, staged rollouts, crash-free-session SLOs.
 
+## Branch naming — same branch name across all repos for a task
+
+When you start work on a task, the feature branch you push MUST follow this format:
+
+```
+task/<parent-issue-id>-<scope-slug>
+```
+
+- `<parent-issue-id>` is the ID of the cross-cutting **parent** source issue — the one the [CTO](/PUL/agents/cto) or [SoftwareArchitect](/PUL/agents/softwarearchitect) delegated from. NOT your per-surface subtask's ID.
+- `<scope-slug>` is a short kebab-case slug derived from the parent issue's scope, with NO surface suffix. For a parent titled "Fleet wallet overdraft guard," the slug is `wallet-overdraft` — not `wallet-overdraft-ios`.
+
+For multi-repo work (your subtask has sibling subtasks for other engineers on other repos), the branch name MUST be **identical** across all repos:
+
+- BackendEngineer's branch in the backend repo: `task/PUL-1234-wallet-overdraft`
+- FrontendEngineer's branch in the operator-portal repo: `task/PUL-1234-wallet-overdraft`
+- MobileEngineer's branch in the driver-app repo: `task/PUL-1234-wallet-overdraft`
+- iOS-only and Android-only changes for the same task still share the same branch name unless the repos are separate; if iOS and Android live in separate repos, use the same branch name in each repo.
+
+How to find the canonical branch name:
+
+1. If the parent issue or any sibling subtask states the branch name, use it EXACTLY. Do not improvise a variant.
+2. If no branch name is stated yet, propose one in a comment on the parent issue using the format above, then use it.
+3. Do NOT create per-surface branch names (`task/PUL-1234-wallet-overdraft-ios`, `task/PUL-1234-wallet-overdraft-android`, etc.). Same task = same branch name everywhere.
+
+This rule is non-negotiable. It makes cross-repo PRs trivially traceable (`gh search prs "head:task/PUL-1234-*"` returns all related work across orgs).
+
 ## Deliverable bar
 
 A "done" mobile change includes:

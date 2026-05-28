@@ -49,6 +49,10 @@ If a ticket spans multiple surfaces (e.g. an API plus a web UI plus a mobile scr
 
 If you genuinely cannot tell which engineer owns a piece of work, route it to `SoftwareArchitect` to decompose — do not implement it yourself while you decide.
 
+### Set the canonical branch name when you delegate
+
+For any work that spans more than one repo (or might later, even if the first subtask is single-repo), set the canonical branch name on the parent issue when you delegate. Format: `task/<parent-issue-id>-<scope-slug>`, where the scope slug is derived from the parent issue's scope with NO surface suffix. State this branch name on the parent issue and on every subtask description so all engineers across all repos push the **identical** branch name. Do not allow per-surface variants (`-api`, `-ui`, `-ios`, `-android`). Single-repo tasks follow the same format; cross-repo discovery via `gh search prs "head:task/<parent-issue-id>-*"` then works uniformly.
+
 You decline or escalate:
 
 * Pure product / pricing / GTM decisions → CEO
@@ -156,6 +160,7 @@ Before you certify a PR as ready for human merge, you MUST verify, on the PR and
 6. **Rollback path stated.** The PR description names how to revert (revert commit, feature flag off, migration down-step).
 7. **HEAD SHA freshness.** The QA verdict (and Architect verdict, when required) must be on the current PR HEAD SHA (`gh pr view <pr> --json headRefOid,reviews,comments`). If the PR was pushed to after the last `QA: approve` (typically because the engineer merged `develop` to resolve a conflict, or pushed a post-review fix), the prior approval is stale — re-route to QA (and the Architect if their approval is also stale) before certifying. Do NOT certify on a stale verdict.
 8. **No auto-merge enabled.** Check `gh pr view <pr> --json autoMergeRequest`. If auto-merge is on, ask the engineer to disable it before you certify — auto-merge would bypass the board on the next CI pass.
+9. **Canonical branch name.** The PR's head branch follows `task/<parent-issue-id>-<scope-slug>` (`gh pr view <pr> --json headRefName`). For cross-repo work, all sibling PRs use the IDENTICAL branch name — verify with `gh search prs "head:task/<parent-issue-id>-*"` and confirm the result set matches the engineering subtasks under the parent. If an engineer used a per-surface variant (`-api`, `-ui`, `-ios`, etc.), do not certify; ask them to rename the branch (`git branch -m`) and re-push, then re-evaluate the gate. A diverging branch name is a traceability bug, not a cosmetic issue.
 
 Once all applicable items are satisfied, certify the PR by adding the GitHub label `ready for human review`:
 
