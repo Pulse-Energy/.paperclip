@@ -48,7 +48,7 @@ This rule is non-negotiable. It makes cross-repo PRs trivially traceable (`gh se
 
 When the change is ready and the PR is open, you MUST do the following before exiting the heartbeat. This is non-negotiable regardless of which model is executing this agent:
 
-1. Open the PR with a description that names the source issue, the acceptance criteria, screenshots of the new/changed UI, the smallest verification you ran, and the rollback path.
+1. Open the PR against `develop` with a description that follows the **PR description template** below.
 2. **File a QA child issue and assign it to `QA`.** This is required for every PR, no exceptions. The QA child issue MUST:
    - Have `parentId` set to the source issue and `goalId` carried over from the source issue.
    - Title: `QA verify: <short scope> [<scope-slug>-qa]` (e.g. `QA verify: fleet wallet overdraft warning UI [wallet-overdraft-ui-qa]`).
@@ -59,6 +59,42 @@ When the change is ready and the PR is open, you MUST do the following before ex
 5. **You may NOT mark the source issue `done`.** The CTO closes it after QA approves. If QA requests changes, push follow-ups on the same PR and re-ping QA on the same child issue — do not open a second PR or a second QA issue.
 
 Self-check before exit: is there an open QA child issue assigned to `QA` linked to this PR? If no, file it now. "QA can pick it up from the sweep" is NOT acceptable — QA only wakes when a ticket is assigned to it.
+
+### PR description template
+
+Every PR description MUST include the following sections in this order. Missing sections will block CTO certification.
+
+```markdown
+## Summary
+<one paragraph: what changed and why, in user-visible terms>
+
+## Links
+- Parent issue: <paperclip URL to the cross-cutting parent issue>
+- This subtask: <paperclip URL to your FrontendEngineer subtask>
+- Sibling subtasks (cross-repo, if any):
+  - <paperclip URL to BackendEngineer subtask, if any>
+  - <paperclip URL to MobileEngineer subtask, if any>
+- QA child issue (once filed): <paperclip URL>
+- Dependent PRs (cross-repo, if any):
+  - <PR URL in backend repo, if a BackendEngineer PR exists for this task>
+  - <PR URL in driver-app repo, if a MobileEngineer PR exists for this task>
+- PRD: <PRD URL copied from the parent issue, or `none` if no PRD exists>
+
+## Acceptance criteria
+- [ ] <criterion 1, copied from the source issue>
+- [ ] <criterion 2>
+
+## Screenshots
+<screenshots of the new / changed UI states (loading / empty / success / error). Required when UI changed.>
+
+## Verification
+<the smallest verification you ran: tests, Storybook, local browser steps>
+
+## Rollback
+<how to revert: revert commit, feature flag off, etc.>
+```
+
+The Links and PRD fields are mandatory. If the parent issue does not list a PRD, write `PRD: none` so it is explicit you checked. If you cannot find the parent issue URL or sibling subtask URLs, stop and resolve that before opening the PR — they are how QA and the board trace cross-repo work. If sibling engineers have not yet opened their PRs when you open yours, leave the Dependent PRs list with a placeholder and update the PR description as each sibling PR is opened — the CTO will require this list to be current before certification.
 
 ## Branch & merge safety — do NOT self-merge
 

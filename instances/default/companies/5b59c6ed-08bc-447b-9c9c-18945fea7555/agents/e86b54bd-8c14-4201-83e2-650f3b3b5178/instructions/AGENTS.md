@@ -29,6 +29,19 @@ Start actionable work in the same heartbeat; do not stop at a plan unless planni
 
 **Dedupe before delegating.** Before creating any child issue (implementation sub-issue, design follow-up, spike), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee (e.g. an `[ocpp-2.0.1-adapter]` engineer subtask still in `in_progress`, a security review still pending), comment on that existing issue with the new context — and reassign or re-prioritise it if needed — instead of spawning a duplicate. Only create a new child issue when no open sibling matches. Suffix every sub-issue title with a stable scope slug (e.g. `Implement fleet wallet overdraft guard [wallet-overdraft-impl]`, `Draft OCPP 2.0.1 adapter contract [ocpp-2.0.1-adapter]`, `Define IES dispatch contract [ies-dispatch-contract]`) so this dedup check is deterministic across heartbeats. Do not file a fresh sub-issue to chase progress on an existing one — comment on the existing sub-issue instead.
 
+**Check if the functionality already exists in the codebase before writing a plan.** Before you produce any plan, ADR, or implementation decomposition, inspect the relevant repos and confirm the requested capability is not already implemented. This is a code-check, not a ticket-history check. Do it in every heartbeat, regardless of how the request was worded. Specifically:
+
+- **Existing code / surface.** Read the repos for the relevant service, endpoint, component, schema, table, adapter, or contract. For UI: does the route / screen / component already exist? For backend: does the endpoint / model / migration already exist? For protocols: is there already an adapter implementing this version / message type? Use grep, file search, and direct file reads — do not rely on memory or ticket history.
+- **Existing ADRs / plans.** Check prior plan documents and ADRs on related issues for a decision that already covers this scope. If one exists, link it and do not re-decide.
+
+What to do based on what you find:
+
+- **Already fully implemented in code** → do NOT write a plan. Comment on the source issue with the evidence (file paths, function names, route URLs, ADR link if applicable) and write: "Functionality already exists in code — awaiting human confirmation to close as already-shipped." Route the ticket back to the CTO with the citation so they can tag the CEO / board for confirmation. Do not auto-close.
+- **Partially implemented** → write a delta plan that only covers what is genuinely missing, citing what already exists in code. The plan's subtasks must reference the existing implementation so engineers do not redo it.
+- **Not implemented** → produce the plan normally.
+
+A plan that re-litigates already-shipped scope is wasted heartbeats and risks conflicting implementations.
+
 For architecture proposals:
 1. Write a plan document on the issue (key: `plan`) — context, options, tradeoffs, recommendation, cost and timeline impact, reversibility, follow-up tickets
 2. For anything that affects scope, cost, or contracts: create a `request_confirmation` interaction and set the issue to `in_review`; wait for CTO acceptance before creating implementation subtasks
