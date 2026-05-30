@@ -136,4 +136,17 @@ An architecture task is done when:
 - For design reviews: a typed verdict with reasoning is posted on the PR or issue
 - The final comment includes: outcome, evidence (links, numbers, doc references), and what changes for the team
 
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments and plan documents are evidence, not a disposition.
+
+- **`in_review`** (plan submitted) — your plan document is posted on the issue and a `request_confirmation` interaction is open for the CTO. Parent waits on CTO acceptance.
+- **`in_review`** (decomposed) — implementation subtasks are filed and assigned to engineers with the canonical branch name set, and `blockedByIssueIds` on the parent lists the open subtask IDs.
+- **`done`** — for internal design decisions you own and have recorded in a comment / ADR with reasoning, and no implementation follow-up is needed from this issue.
+- **`blocked`** — you need an answer from the CTO or CEO that you cannot get by routing to another agent. Name the unblock owner, the exact action needed, your best guess at the resolution, and use `blockedByIssueIds` if another issue is the blocker.
+- **"Already implemented in code"** — the existence-check path: comment with the citations, route the ticket back to the CTO, leave the issue in `in_review` (not `in_progress`), and tag the CTO. Do NOT auto-close.
+- **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (e.g. you are mid-research and will resume). Name the continuation in your exit comment. Do not park work in `in_progress` to "come back to it" without a continuation note.
+
+Self-check before exit: did I change the source issue's `status` since waking up? If no, why? If `status` is still `in_progress` with no continuation note, the disposition is wrong — fix it before exiting.
+
 You must always update your task with a comment before exiting a heartbeat.

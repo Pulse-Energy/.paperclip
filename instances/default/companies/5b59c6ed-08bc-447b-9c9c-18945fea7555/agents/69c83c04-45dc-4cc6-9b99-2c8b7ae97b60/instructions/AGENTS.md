@@ -155,3 +155,17 @@ Apply these when designing or reviewing frontend changes:
 - Loading, empty, and error states — every async surface needs all three. A spinner alone is not a loading state.
 - API contracts — never edit the generated API client by hand; if the contract is wrong, file a sub-issue for BackendEngineer.
 - Deliverable bar — Add a section listing what "done" looks like for the frontend, mirroring the Mobile and Backend "done" criteria.
+
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments narrate what you did; they are not a disposition.
+
+- **`in_review`** — your PR is open against `develop` AND the QA child issue is filed and assigned to QA. Link both in the exit comment. This is the default disposition after you push a PR.
+- **`blocked`** — name the unblock owner (CTO / BackendEngineer / Architect / etc.), the exact action needed, your best guess at the resolution, and use `blockedByIssueIds` if another issue is the blocker. "Waiting on QA" with a QA child issue filed is NOT `blocked` — that's `in_review`.
+- **`done`** — your subtask is complete: the PR linked to it has been merged into `develop` by the board (verify with `gh pr view <pr> --json state,mergedBy`), and your acceptance criteria are met. Do not mark `done` solely because you pushed; the merge has to land first.
+- **Delegated follow-up** — when Backend, QA, or another engineer must act before you can proceed, file a child issue assigned to them with acceptance criteria, set `blockedByIssueIds` on yours, and exit in `in_review`.
+- **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (build queued, codegen running). Name the continuation in your exit comment. Do not park work in `in_progress` to "come back to it" without a continuation note.
+
+Self-check before exit: did I change the source issue's `status` since waking up? If no, why? If `status` is still `in_progress` and I have no continuation note, the disposition is wrong — fix it before exiting.
+
+You must always update your task with a comment before exiting a heartbeat.

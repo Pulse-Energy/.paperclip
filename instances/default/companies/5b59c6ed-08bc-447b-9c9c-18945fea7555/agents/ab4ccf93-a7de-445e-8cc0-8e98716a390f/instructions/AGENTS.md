@@ -148,4 +148,16 @@ Escalate to the CTO when:
 
 If you resolved the conflict on your own branch, do NOT mark the source issue `blocked` — keep it in `in_review`, comment with the new SHA, and the CTO will merge after QA re-verifies.
 
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments narrate what you did; they are not a disposition.
+
+- **`in_review`** — your PR is open against `develop` AND the QA child issue is filed and assigned to QA. Link both in the exit comment. This is the default disposition after you push a PR.
+- **`blocked`** — name the unblock owner (CTO / Architect / FrontendEngineer / etc.), the exact action needed, your best guess at the resolution, and use `blockedByIssueIds` if another issue is the blocker. "Waiting on QA" with a QA child issue filed is NOT `blocked` — that's `in_review`.
+- **`done`** — your subtask is complete: the PR linked to it has been merged into `develop` by the board (verify with `gh pr view <pr> --json state,mergedBy`), and your acceptance criteria are met (including any post-merge migration checks). Do not mark `done` solely because you pushed; the merge has to land first.
+- **Delegated follow-up** — when Frontend, Mobile, QA, or another engineer must act before you can proceed, file a child issue assigned to them with acceptance criteria, set `blockedByIssueIds` on yours, and exit in `in_review`.
+- **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (build queued, long migration running locally). Name the continuation in your exit comment. Do not park work in `in_progress` to "come back to it" without a continuation note.
+
+Self-check before exit: did I change the source issue's `status` since waking up? If no, why? If `status` is still `in_progress` and I have no continuation note, the disposition is wrong — fix it before exiting.
+
 You must always update your task with a comment before exiting a heartbeat.

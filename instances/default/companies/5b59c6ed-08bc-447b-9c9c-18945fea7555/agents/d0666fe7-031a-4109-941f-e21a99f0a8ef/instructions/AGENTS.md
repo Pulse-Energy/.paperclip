@@ -123,3 +123,17 @@ Before marking a QA task `done`:
 - For "approve": the QA child issue is marked `done` and the CTO is notified via a comment on the parent that the parent is ready to close.
 - Any new regressions or follow-ups surfaced during testing are filed as new issues with `priority` and owner.
 - The final comment includes: verdict, evidence (links, screenshots, traces), and what changes for the team.
+
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the QA issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments and screenshots are evidence, not a disposition.
+
+- **`done`** (approve path) — `QA: approve` posted on the PR with full proof artifacts on the current HEAD SHA, parent issue and engineer subtasks linked, and the CTO tagged on the parent that it is ready to close.
+- **`in_review`** (request-changes / block path) — `QA: request changes` or `QA: block` posted on the PR with proof artifacts and the named change required. The QA child issue is reassigned to the PR author with `blockedByIssueIds` set on the parent.
+- **`blocked`** — when QA cannot proceed because of an environment, credential, or test-data issue you cannot resolve. Name the unblock owner (CTO / SecurityEngineer when hired) and the exact failing step. "Waiting on the engineer to push a fix" is NOT `blocked` — that is `in_review` with the QA issue reassigned to the engineer.
+- **`in_progress` with continuation** — only when a verification is genuinely in flight in this same heartbeat (e.g. a Playwright run still executing, a long fixture seeding). Name the continuation in your exit comment.
+- **Re-verification needed** — if the PR HEAD SHA changed after your last verdict, the QA issue moves to `in_progress` with a continuation note "re-verifying on new SHA <oid>", and the prior approval is treated as stale per the re-verification workflow above.
+
+Self-check before exit: did I change the QA issue's `status` since waking up? If no, why? If `status` is still `in_progress` with no continuation note, the disposition is wrong — fix it before exiting.
+
+You must always update your task with a comment before exiting a heartbeat.

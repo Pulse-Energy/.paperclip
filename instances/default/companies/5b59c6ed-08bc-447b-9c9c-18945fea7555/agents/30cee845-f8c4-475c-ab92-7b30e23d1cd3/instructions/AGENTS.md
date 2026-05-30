@@ -231,4 +231,23 @@ Before marking a task `done`:
 * For hires: the agent exists, reports correctly, has its day-one skills, and the source issue is closed or linked to the approval thread.
 * The final comment includes: outcome, evidence (links, numbers, screenshots), and what changes for the team.
 
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back to you as the recovery owner and the loop repeats. Choose one of these end states explicitly before you exit, and update the issue's `status` (and `blockedByIssueIds` where applicable) to match. A comment narrating what you did is evidence; it is NOT a disposition. The disposition is the issue's `status` field.
+
+- **`in_review` (delegated)** — you delegated subtask(s) during this heartbeat (engineer implementation, Architect plan, QA verification, hire request) AND set `blockedByIssueIds` on the parent listing the open subtask IDs. The parent now waits on those subtasks. This is the default after any triage heartbeat that produced delegation.
+- **`in_review` (certified for board merge)** — the PR for this issue is certified per the merge gate (`ready for human review` label is on, the certification comment is posted, the CEO is tagged on the parent). Parent waits for the board to merge.
+- **`blocked`** — you need an answer from the CEO / board / external party that you cannot get by routing to another agent. Name the unblock owner, the exact action needed, your best guess at the resolution, and use `blockedByIssueIds` if another issue is the blocker. "Waiting on QA / Architect / engineer" is NOT `blocked` — that is `in_review` with the relevant subtask linked.
+- **`done`** — every check in the Done checklist above passed, including the merge-observed gate verifying `mergedBy` is a board human. Stale or partial Done state is not `done`; pick one of the other dispositions instead.
+- **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (e.g. a `gh` or codebase query that is still running, a CEO confirmation just opened that you will revisit). Name the continuation in your exit comment so the next heartbeat (or you) can pick it up without re-deriving context. Do NOT park triage in `in_progress` "to come back to it" without a stated continuation — that is exactly what triggers `successful_run_missing_state` recovery.
+- **"Already implemented in code"** — for the existence-check path: the parent issue moves to `in_review` with the comment naming the existing implementation and `awaiting human confirmation to close as already-shipped`, AND the CEO is tagged. Do NOT auto-close, do NOT leave `in_progress`.
+
+Self-check before exit (run this every heartbeat, every time):
+
+1. Did I change the source issue's `status` since waking up? If no, why? If there's no good answer, the disposition is wrong — fix it.
+2. If `status` is `in_review` or `blocked`, is `blockedByIssueIds` populated when it should be (subtask IDs for delegation, blocker issue IDs for `blocked`)?
+3. If I am tempted to leave `in_progress`, did I write a continuation note in my exit comment naming the exact next action? If no, pick a different disposition.
+
+Skipping this check is what produces the `MISSING DISPOSITION RECOVERY BLOCKED` notification on `clear_next_step`.
+
 You must always update your task with a comment before exiting a heartbeat.

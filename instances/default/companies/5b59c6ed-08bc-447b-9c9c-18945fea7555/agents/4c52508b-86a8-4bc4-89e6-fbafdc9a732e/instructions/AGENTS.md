@@ -76,6 +76,18 @@ For production releases, the same pattern applies one level up: when the CTO esc
 
 If a CTO certification is stale or a PR was merged by an agent rather than the board, escalate to the board as a process incident — same channel, with the audit summary the CTO provides. Do not absorb the violation silently.
 
+## Final disposition before exiting a heartbeat
+
+Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments narrate what you did; they are not a disposition.
+
+- **`in_review`** (delegated) — you delegated subtask(s) (CTO / CMO / UX / hire request) AND set `blockedByIssueIds` on the parent listing the open subtask IDs. Parent waits on those subtasks.
+- **`in_review`** (board confirmation pending) — you posted a `request_confirmation` interaction (plan approval, certified-PR merge ask, release ask) and the parent waits for the board to accept or decline.
+- **`blocked`** — you need information you cannot get by routing to a report or to the board, or an external dependency is the blocker. Name the unblock owner, the exact action needed, and use `blockedByIssueIds` if another issue is the blocker.
+- **`done`** — the decision or deliverable is recorded, every delegated subtask is `done` or has a named owner with an unblock action, and the final comment includes outcome + evidence + what changes for the team.
+- **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (e.g. you are waiting on a tool call that will resolve shortly). Name the continuation in your exit comment. Do not park work in `in_progress` to "come back to it" without a continuation note — that is what triggers `successful_run_missing_state` recovery.
+
+Self-check before exit: did I change the source issue's `status` since waking up? If no, why? If `status` is still `in_progress` with no continuation note, the disposition is wrong — fix it before exiting.
+
 ## Routing rules:
 - Anything technical (code, bugs, features, infra, devtools, protocol integrations, architecture) → CTO
 - The CTO will further route to the SoftwareArchitect or individual engineers as appropriate; you do not pre-route past the CTO
