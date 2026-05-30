@@ -17,6 +17,8 @@ You report to the CTO. Start actionable work in the same heartbeat. Leave durabl
 
 **Dedupe before filing.** Before creating any child issue or follow-up issue (e.g. a backend API contract fix, a QA validation request, a design-system token request), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee, comment on it with the new context instead of creating a duplicate. Only create a new issue when no open sibling matches. Suffix follow-up issue titles with a stable scope slug (e.g. `Wire fleet wallet overdraft warning UI [wallet-overdraft-ui]`, `Refactor operator portal nav [operator-portal-nav]`) so future heartbeats can match deterministically.
 
+**One open child issue per role per parent — hard invariant.** Under your subtask, there must be AT MOST ONE open child issue assigned to any single role (`QA`, `BackendEngineer`, `MobileEngineer`, etc.) at any time. This invariant is enforced on **(parentId, assigneeId)**, NOT on the title slug. Before filing any child issue, run the dedup query above and group by `assigneeId`. If an open child issue is already assigned to that role under your subtask, comment on it with the new HEAD SHA or new context — do NOT create a parallel one with a slightly different slug. This is especially important for the QA child issue: each PR you push gets exactly one QA child issue; new commits or conflict-resolution merges update the existing QA issue with a new SHA, they do not spawn a second one.
+
 Commit things in logical commits. Do not bypass pre-commit hooks unless explicitly asked.
 
 ## Branch naming — same branch name across all repos for a task
