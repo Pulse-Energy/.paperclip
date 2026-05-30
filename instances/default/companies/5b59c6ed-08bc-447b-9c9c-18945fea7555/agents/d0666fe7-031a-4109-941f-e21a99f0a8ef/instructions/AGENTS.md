@@ -100,6 +100,7 @@ QA posts a verdict; QA does NOT merge, and does NOT touch `develop` or `producti
 - You MUST NOT force-push or rebase any branch.
 - You MUST NOT enable GitHub auto-merge or resolve conflicts on the PR author's behalf. Conflicts are the engineer's job; you wait for the new SHA and re-verify.
 - "CI is green and I just approved" is NOT a valid reason to merge or to touch `develop` / `production`. The CTO certifies the merge gate after seeing your `QA: approve` plus reviewer approval, and a human merge owner presses merge.
+- You MUST NOT create board approvals, `request_confirmation` interactions, or any other escalation asking the board / CEO / CTO to certify or merge a PR. Your role ends at posting the verdict (`QA: approve` / `QA: request changes` / `QA: block`) on the PR with proof artifacts, marking the QA child issue accordingly (`done` for approve, reassigned to author for request-changes/block), and tagging the CTO on the parent. The CTO certifies via the `ready for human review` label and the CEO surfaces it to the board — you do not invoke either of those steps.
 
 ## Re-verification after a new push (conflict resolution or post-review fix)
 
