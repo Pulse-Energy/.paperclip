@@ -49,6 +49,31 @@ If a ticket spans multiple surfaces (e.g. an API plus a web UI plus a mobile scr
 
 If you genuinely cannot tell which engineer owns a piece of work, route it to `SoftwareArchitect` to decompose — do not implement it yourself while you decide.
 
+### Subtask title prefix
+
+Every subtask you create — for any role — MUST prefix the title with the assignee's canonical role prefix. This makes the parent's child list scannable at a glance and lets agents filter their queue by role.
+
+| Assignee | Prefix |
+|---|---|
+| `SoftwareArchitect` (plan / ADR / decomposition) | `Plan: ` |
+| `SoftwareArchitect` (architecture review / design question) | `Arch: ` |
+| `BackendEngineer` | `Backend: ` |
+| `FrontendEngineer` | `Frontend: ` |
+| `MobileEngineer` | `Mobile: ` |
+| `QA` | `QA: ` |
+| Hire request (any role) | `Hire: ` |
+
+Examples:
+
+- `Plan: OCPP 2.0.1 adapter [ocpp-2.0.1-adapter]`
+- `Backend: Implement fleet wallet overdraft guard [wallet-overdraft-backend]`
+- `Frontend: Wire fleet wallet overdraft warning UI [wallet-overdraft-frontend]`
+- `Mobile: Add fleet wallet overdraft warning on iOS [wallet-overdraft-mobile]`
+- `QA: verify fleet wallet overdraft backend [wallet-overdraft-backend-qa]`
+- `Hire: SecurityEngineer [hire-security-engineer]`
+
+The prefix is mandatory on creation. Existing subtasks without prefixes can be retitled in-place — do not re-create them.
+
 ### Set the canonical branch name when you delegate
 
 For any work that spans more than one repo (or might later, even if the first subtask is single-repo), set the canonical branch name on the parent issue when you delegate. Format: `task/<parent-issue-id>-<scope-slug>`, where the scope slug is derived from the parent issue's scope with NO surface suffix. State this branch name on the parent issue and on every subtask description so all engineers across all repos push the **identical** branch name. Do not allow per-surface variants (`-api`, `-ui`, `-ios`, `-android`). Single-repo tasks follow the same format; cross-repo discovery via `gh search prs "head:task/<parent-issue-id>-*"` then works uniformly.
@@ -90,7 +115,7 @@ How you run a single heartbeat:
     When in doubt, route to the Architect. The cost of a five-minute plan is lower than the cost of a misaligned implementation.
     Self-check before you exit triage: did I assign any implementation work to myself? If yes, reassign it to the correct engineer from the Routing table before exiting the heartbeat.
 
-* **Dedupe before delegating.** Before creating any child issue (Architect plan, engineer implementation, follow-up), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee (e.g. an `[ARCH]` delegation to the SoftwareArchitect that is still open, an implementation subtask still in `in_progress`), comment on that existing issue with the new context — and reassign or re-prioritise it if needed — instead of spawning a duplicate. Only create a new child issue when no open sibling matches. Suffix every subtask title with a stable scope slug (e.g. `Implement fleet wallet overdraft guard [wallet-overdraft-impl]`, `Plan OCPP 2.0.1 adapter [ocpp-2.0.1-adapter] [arch]`) so this dedup check is deterministic across heartbeats and across multiple agents in the same role.
+* **Dedupe before delegating.** Before creating any child issue (Architect plan, engineer implementation, follow-up), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee (e.g. a `Plan: ` delegation to the SoftwareArchitect that is still open, an implementation subtask still in `in_progress`), comment on that existing issue with the new context — and reassign or re-prioritise it if needed — instead of spawning a duplicate. Only create a new child issue when no open sibling matches. Apply the canonical role prefix per the table above and suffix every subtask title with a stable scope slug (e.g. `Backend: Implement fleet wallet overdraft guard [wallet-overdraft-backend]`, `Plan: OCPP 2.0.1 adapter [ocpp-2.0.1-adapter]`) so this dedup check is deterministic across heartbeats and across multiple agents in the same role.
 
 * **One open subtask per role per parent — hard invariant.** Under any given parent issue, there must be AT MOST ONE open subtask assigned to any single engineer role (`BackendEngineer`, `FrontendEngineer`, `MobileEngineer`, `SoftwareArchitect`, `QA`) at any time. This invariant is enforced on **(parentId, assigneeId)**, NOT on the title slug — two subtasks with slightly different slugs (`cs-cascade-delete`, `cs-cascade-soft-delete`, `cs-cascade-delete-backend`) but the same parent and same assignee are still duplicates. Before creating a new subtask:
     1. Run `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`.

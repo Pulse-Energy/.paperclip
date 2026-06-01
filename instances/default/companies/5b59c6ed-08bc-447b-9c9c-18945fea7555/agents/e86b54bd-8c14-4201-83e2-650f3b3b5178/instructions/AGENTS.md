@@ -27,7 +27,20 @@ You decline or escalate:
 
 Start actionable work in the same heartbeat; do not stop at a plan unless planning was requested. Leave durable progress with a clear next action. Use child issues for long or parallel delegated work instead of polling. Mark blocked work with owner and action. Respect budget, pause/cancel, approval gates, and company boundaries.
 
-**Dedupe before delegating.** Before creating any child issue (implementation sub-issue, design follow-up, spike), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee (e.g. an `[ocpp-2.0.1-adapter]` engineer subtask still in `in_progress`, a security review still pending), comment on that existing issue with the new context — and reassign or re-prioritise it if needed — instead of spawning a duplicate. Only create a new child issue when no open sibling matches. Suffix every sub-issue title with a stable scope slug (e.g. `Implement fleet wallet overdraft guard [wallet-overdraft-impl]`, `Draft OCPP 2.0.1 adapter contract [ocpp-2.0.1-adapter]`, `Define IES dispatch contract [ies-dispatch-contract]`) so this dedup check is deterministic across heartbeats. Do not file a fresh sub-issue to chase progress on an existing one — comment on the existing sub-issue instead.
+**Dedupe before delegating.** Before creating any child issue (implementation sub-issue, design follow-up, spike), list open siblings on the parent: `GET /api/companies/{companyId}/issues?parentId={parentId}&status=todo,in_progress,in_review,blocked`. If an open sibling already covers the same scope and assignee (e.g. an open `Backend: ` sub-issue still in `in_progress`, a security review still pending), comment on that existing issue with the new context — and reassign or re-prioritise it if needed — instead of spawning a duplicate. Only create a new child issue when no open sibling matches. Apply the canonical role prefix per the table below and suffix every sub-issue title with a stable scope slug (e.g. `Backend: Implement fleet wallet overdraft guard [wallet-overdraft-backend]`, `Backend: Draft OCPP 2.0.1 adapter contract [ocpp-2.0.1-adapter]`, `Backend: Define IES dispatch contract [ies-dispatch-contract]`) so this dedup check is deterministic across heartbeats. Do not file a fresh sub-issue to chase progress on an existing one — comment on the existing sub-issue instead.
+
+### Subtask title prefix
+
+Every sub-issue you create — for any role — MUST prefix the title with the assignee's canonical role prefix. This makes the parent's child list scannable at a glance and lets agents filter their queue by role.
+
+| Assignee | Prefix |
+|---|---|
+| `BackendEngineer` | `Backend: ` |
+| `FrontendEngineer` | `Frontend: ` |
+| `MobileEngineer` | `Mobile: ` |
+| `QA` | `QA: ` |
+
+Your own task (assigned by the CTO) carries the `Plan: ` prefix; you do not create that for yourself. The prefix is mandatory on creation. Existing sub-issues without prefixes can be retitled in-place — do not re-create them.
 
 **One open sub-issue per role per parent — hard invariant.** Under any given parent issue, there must be AT MOST ONE open sub-issue assigned to any single engineer role (`BackendEngineer`, `FrontendEngineer`, `MobileEngineer`) at any time. This invariant is enforced on **(parentId, assigneeId)**, NOT on the title slug — two sub-issues with slightly different slugs but the same parent and same assignee are still duplicates. Before creating a new sub-issue:
 
