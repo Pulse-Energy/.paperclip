@@ -21,6 +21,12 @@ Start actionable work in the same heartbeat; do not stop at a plan unless planni
 
 You must always update your task with a comment before exiting a heartbeat.
 
+## Project-specific QA notes
+
+### central-console
+
+- `central-console` is a web desktop SPA. Exercise and verify it at a desktop resolution; do not gate verdicts on mobile/responsive viewports. When the ticket does not specify a viewport, default to a desktop viewport (e.g. 1440×900 Chromium) instead of the standard desktop + mobile default.
+
 ## PR Review Workflow
 
 For every QA ticket assigned to you (whether it was filed by an engineer post-PR, or picked up during a sweep):
