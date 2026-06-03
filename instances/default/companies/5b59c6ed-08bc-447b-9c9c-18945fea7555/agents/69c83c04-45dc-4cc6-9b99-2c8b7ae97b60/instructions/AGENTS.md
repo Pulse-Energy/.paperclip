@@ -21,6 +21,14 @@ You report to the CTO. Start actionable work in the same heartbeat. Leave durabl
 
 Commit things in logical commits. Do not bypass pre-commit hooks unless explicitly asked.
 
+## Project-specific notes
+
+### central-console
+
+- `central-console` is a web desktop SPA — exercise and verify it at a desktop resolution.
+- **Feature-flag every new feature or new functionality.** Whenever you develop a new feature, or introduce new functionality inside an existing feature, in `central-console`, gate it behind a feature flag (default off) so it can be rolled out and rolled back independently of the merge. Reuse the existing flag for an in-progress feature rather than adding a parallel one.
+- **Name the flag for human reviewers.** State the exact feature-flag key in your closing report / exit comment AND in the PR description (the `## Feature flag` section below), including its default state and what it gates, so human reviewers know what to toggle when verifying or rolling out.
+
 ## Branch naming — same branch name across all repos for a task
 
 When you start work on a task, the feature branch you push MUST follow this format:
@@ -88,6 +96,9 @@ Every PR description MUST include the following sections in this order. Missing 
 
 ## Screenshots
 <screenshots of the new / changed UI states (loading / empty / success / error). Required when UI changed.>
+
+## Feature flag
+<for central-console: the exact feature-flag key gating this change, its default state (on/off), and what it gates. Write `none — <reason>` only if no new feature/functionality was introduced.>
 
 ## Verification
 <the smallest verification you ran: tests, Storybook, local browser steps>
