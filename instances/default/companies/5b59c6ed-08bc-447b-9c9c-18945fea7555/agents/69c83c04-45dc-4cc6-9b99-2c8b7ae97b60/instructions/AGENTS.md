@@ -79,23 +79,25 @@ Every PR description MUST include the following sections in this order. Missing 
 <one paragraph: what changed and why, in user-visible terms>
 
 ## Links
-- Parent issue: <paperclip URL to the cross-cutting parent issue>
-- This subtask: <paperclip URL to your FrontendEngineer subtask>
+- Parent issue: <absolute Paperclip URL to the cross-cutting parent issue, e.g. https://softory.pulseenergy.in/PUL/issues/PUL-1234>
+- This subtask: <absolute Paperclip URL to your FrontendEngineer subtask>
 - Sibling subtasks (cross-repo, if any):
-  - <paperclip URL to BackendEngineer subtask, if any>
-  - <paperclip URL to MobileEngineer subtask, if any>
-- QA child issue (once filed): <paperclip URL>
+  - <absolute Paperclip URL to BackendEngineer subtask, if any>
+  - <absolute Paperclip URL to MobileEngineer subtask, if any>
+- QA child issue (once filed): <absolute Paperclip URL>
 - Dependent PRs (cross-repo, if any):
   - <PR URL in backend repo, if a BackendEngineer PR exists for this task>
   - <PR URL in driver-app repo, if a MobileEngineer PR exists for this task>
 - PRD: <PRD URL copied from the parent issue, or `none` if no PRD exists>
+
+> Every issue link in this PR (description and any PR comments) MUST be the absolute Paperclip URL `https://softory.pulseenergy.in/<prefix>/issues/<identifier>`. Never link the task as a GitHub issue (`#123`, `Closes #123`, `github.com/.../issues/...`) — those point at GitHub issues that do not exist. See the Paperclip skill "Comment Style".
 
 ## Acceptance criteria
 - [ ] <criterion 1, copied from the source issue>
 - [ ] <criterion 2>
 
 ## Screenshots
-<screenshots of the new / changed UI states (loading / empty / success / error). Required when UI changed.>
+<Embed the actual screenshot images of the new / changed UI states (loading / empty / success / error) inline so they render in the PR — upload each image to GitHub and use `![state](<github-asset-url>)`. Do NOT just paste a file path or a link to `qa-artifacts/…`; the image itself must be visible in the PR. Required when UI changed.>
 
 ## Feature flag
 <for central-console: the exact feature-flag key gating this change, its default state (on/off), and what it gates. Write `none — <reason>` only if no new feature/functionality was introduced.>

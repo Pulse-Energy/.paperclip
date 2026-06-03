@@ -78,16 +78,18 @@ Every PR description MUST include the following sections in this order. Missing 
 <one paragraph: what changed and why, in API / data terms>
 
 ## Links
-- Parent issue: <paperclip URL to the cross-cutting parent issue>
-- This subtask: <paperclip URL to your BackendEngineer subtask>
+- Parent issue: <absolute Paperclip URL to the cross-cutting parent issue, e.g. https://softory.pulseenergy.in/PUL/issues/PUL-1234>
+- This subtask: <absolute Paperclip URL to your BackendEngineer subtask>
 - Sibling subtasks (cross-repo, if any):
-  - <paperclip URL to FrontendEngineer subtask, if any>
-  - <paperclip URL to MobileEngineer subtask, if any>
-- QA child issue (once filed): <paperclip URL>
+  - <absolute Paperclip URL to FrontendEngineer subtask, if any>
+  - <absolute Paperclip URL to MobileEngineer subtask, if any>
+- QA child issue (once filed): <absolute Paperclip URL>
 - Dependent PRs (cross-repo, if any):
   - <PR URL in operator-portal repo, if a FrontendEngineer PR exists for this task>
   - <PR URL in driver-app repo, if a MobileEngineer PR exists for this task>
 - PRD: <PRD URL copied from the parent issue, or `none` if no PRD exists>
+
+> Every issue link in this PR (description and any PR comments) MUST be the absolute Paperclip URL `https://softory.pulseenergy.in/<prefix>/issues/<identifier>`. Never link the task as a GitHub issue (`#123`, `Closes #123`, `github.com/.../issues/...`) — those point at GitHub issues that do not exist. See the Paperclip skill "Comment Style".
 
 ## Acceptance criteria
 - [ ] <criterion 1, copied from the source issue>

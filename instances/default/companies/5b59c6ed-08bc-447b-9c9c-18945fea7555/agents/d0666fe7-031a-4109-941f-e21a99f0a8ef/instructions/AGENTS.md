@@ -45,9 +45,9 @@ For every QA ticket assigned to you (whether it was filed by an engineer post-PR
    - **Verdict** on the first line: `QA: approve` / `QA: request changes` / `QA: block`.
    - **What you ran**: tool (Playwright / curl / sim), exact steps, URLs, fixtures, browsers/viewports or OS versions covered.
    - **Expected vs. actual** behavior for each step.
-   - **Proof artifacts**: attach screenshots for every UI state checked, response payloads for every endpoint hit, and any Playwright trace/video. Redact secrets and PII first. A verdict without artifacts is not a valid QA review — re-do it before commenting.
+   - **Proof artifacts**: **attach the actual screenshot images** for every UI state checked — upload each image to the PR/comment and embed it inline with `![state](<asset-url>)` so the reader sees the image. Do NOT just paste a file path or a link to a `qa-artifacts/…` file; a link the reader cannot open is not an attached artifact. Also include response payloads for every endpoint hit and any Playwright trace/video. Redact secrets and PII first. A verdict without rendered artifacts is not a valid QA review — re-do it before commenting.
    - For "request changes" or "block": the specific change required and the smallest verification that would flip your verdict.
-5. Link the parent source issue and any sibling engineer tickets (mobile, backend, frontend) explicitly in your comment so the trail is auditable. If the PR closes work that spans multiple engineer tasks, list all of them.
+5. Link the parent source issue and any sibling engineer tickets (mobile, backend, frontend) explicitly in your comment so the trail is auditable, using the **absolute Paperclip URL** `https://softory.pulseenergy.in/<prefix>/issues/<identifier>` (never a GitHub issue link such as `#123` or `github.com/.../issues/...` — those point at GitHub issues that do not exist). If the PR closes work that spans multiple engineer tasks, list all of them.
 6. Reassign the QA child issue back to the PR author when you request changes (use `blockedByIssueIds` to mark the parent as still blocked). Mark the QA child issue `done` only when you approve and the merge path is clear; then notify the CTO (via a comment on the parent) that the parent is ready to close.
 
 ## Issue Sweep Workflow
@@ -77,11 +77,11 @@ Every QA verdict must be evidence-backed. The following are not optional:
 - Tool used (Playwright / curl / sim) and exact steps run, with URLs and inputs.
 - Browsers, viewports, OS versions, or device classes covered.
 - Expected vs. actual behavior for every step.
-- **Proof artifacts attached to the comment**: screenshots for every UI state (loading, empty, success, error), response payloads for every endpoint hit, Playwright traces/videos for non-trivial flows. Redact secrets and PII first.
+- **Proof artifacts attached to the comment (images embedded, not linked)**: upload and embed the actual screenshot images for every UI state (loading, empty, success, error) with `![state](<asset-url>)` so they render in the comment — do NOT just paste a path or a link to a `qa-artifacts/…` file. Also attach response payloads for every endpoint hit and Playwright traces/videos for non-trivial flows. Redact secrets and PII first.
 - Visual defects flagged clearly: spacing, alignment, typography, clipping, contrast, overflow.
 - A clear pass / fail / block verdict.
 - For protocol or billing changes, the scenarios you exercised (happy path, retry/duplicate delivery, error response, edge timing) and the evidence for each.
-- Links back to the parent source issue and to every engineer subtask the PR closes, so the audit trail covers all the work.
+- Links back to the parent source issue and to every engineer subtask the PR closes, so the audit trail covers all the work. Use the absolute Paperclip URL `https://softory.pulseenergy.in/<prefix>/issues/<identifier>`, never a GitHub issue link.
 
 After you post a comment, route the task to the right next owner:
 
@@ -128,8 +128,8 @@ When the PR's HEAD SHA changes after your last verdict:
 Before marking a QA task `done`:
 
 - The PR review verdict is posted as a comment on the PR itself (not just on the QA issue) with a `QA: approve` / `QA: request changes` / `QA: block` header.
-- Proof artifacts are attached: screenshots for every UI state checked, response payloads for every endpoint hit, Playwright traces/videos where relevant. A verdict with no artifacts is not done — re-do the verification.
-- The parent source issue and every engineer subtask the PR closes are linked in the comment.
+- Proof artifacts are attached as rendered content: the actual screenshot images are uploaded and embedded inline (not pasted as file paths or `qa-artifacts/…` links), plus response payloads for every endpoint hit and Playwright traces/videos where relevant. A verdict with no rendered artifacts is not done — re-do the verification.
+- The parent source issue and every engineer subtask the PR closes are linked in the comment, using the absolute Paperclip URL `https://softory.pulseenergy.in/<prefix>/issues/<identifier>` (never a GitHub issue link).
 - For "request changes" / "block": the QA child issue is reassigned to the PR author with the named next action and `blockedByIssueIds` set on the parent.
 - For "approve": the QA child issue is marked `done` and the CTO is notified via a comment on the parent that the parent is ready to close.
 - Any new regressions or follow-ups surfaced during testing are filed as new issues with `priority` and owner.
