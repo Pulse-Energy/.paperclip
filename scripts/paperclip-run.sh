@@ -15,18 +15,19 @@
 # --- Agent-facing control-plane URL (THE important bit) -----------------------
 export PAPERCLIP_RUNTIME_API_URL="http://127.0.0.1:3100"
 
-# --- Put an nvm-managed node/npx on PATH (launchd starts with a minimal env) --
+# --- PATH (launchd starts with a minimal env: /usr/bin:/bin:/usr/sbin:/sbin) ---
+# We must reconstruct enough of the login-shell PATH that the agent ADAPTERS can
+# find the CLIs they shell out to:
+#   - `cursor` adapter   -> `agent`  (cursor-agent), in ~/.local/bin
+#   - `claude_local`     -> `claude`, in ~/.local/bin
+# If ~/.local/bin is missing here, cursor runs fail with:
+#   Command not found in PATH: "agent"   (stopReason: adapter_failed)
 export NVM_DIR="$HOME/.nvm"
 # Prefer the highest installed nvm node; fall back to sourcing nvm.sh.
 NODE_BIN="$(ls -d "$HOME"/.nvm/versions/node/*/bin 2>/dev/null | sort -V | tail -1)"
-if [ -n "$NODE_BIN" ]; then
-  export PATH="$NODE_BIN:$PATH"
-elif [ -s "$NVM_DIR/nvm.sh" ]; then
-  # shellcheck disable=SC1091
-  . "$NVM_DIR/nvm.sh"
-fi
-# Common Homebrew + system paths as a final safety net.
-export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+[ -z "$NODE_BIN" ] && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # shellcheck disable=SC1091
+
+export PATH="$HOME/.local/bin:${NODE_BIN:+$NODE_BIN:}$HOME/.pyenv/shims:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 cd "$HOME"
 
