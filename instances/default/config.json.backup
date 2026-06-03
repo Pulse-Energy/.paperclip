@@ -1,7 +1,7 @@
 {
   "$meta": {
     "version": 1,
-    "updatedAt": "2026-05-25T13:35:00.172Z",
+    "updatedAt": "2026-05-25T13:35:35.919Z",
     "source": "configure"
   },
   "database": {
@@ -26,6 +26,7 @@
     "host": "127.0.0.1",
     "port": 3100,
     "allowedHostnames": [
+      "paperclip-api.pulseenergy.in",
       "reset-decathlon-pacifist.ngrok-free.dev"
     ],
     "serveUi": true
