@@ -26,7 +26,6 @@
     "host": "127.0.0.1",
     "port": 3100,
     "allowedHostnames": [
-      "127.0.0.1",
       "nearly-boss-pheasant.ngrok-free.app",
       "paperclip-api.pulseenergy.in",
       "reset-decathlon-pacifist.ngrok-free.dev",
