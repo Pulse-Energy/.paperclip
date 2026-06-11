@@ -6,13 +6,21 @@
 # It must run in the FOREGROUND (no nohup/&/daemonizing) so launchd can track,
 # restart, and stop it. Do not background anything in here.
 #
-# Why this exists: agents read PAPERCLIP_RUNTIME_API_URL from the server's
-# environment and inherit it as their PAPERCLIP_API_URL. If that points at an
-# unreachable host (e.g. a stale ngrok tunnel, or an ngrok domain with the wrong
-# :3100 port), every agent API call hangs ~300s and heartbeats stall. Pinning it
-# to loopback keeps all local agents talking to the server directly.
+# Why this exists: if agents inherit an unreachable control-plane URL (e.g. a stale
+# ngrok domain with the wrong :3100 port), every agent API call hangs ~300s and
+# heartbeats stall.
+#
+# NOTE: the export below is a HARMLESS FALLBACK ONLY. It is NOT the real control knob.
+# At startup, @paperclipai/server OVERWRITES process.env.PAPERCLIP_RUNTIME_API_URL
+# from config.json via choosePrimaryRuntimeApiUrl(), whose precedence is:
+#     auth.publicBaseUrl  ->  server.allowedHostnames[0] (+ :port)  ->  bind host
+# With baseUrlMode "auto" (publicBaseUrl unset) it uses allowedHostnames[0]. So the
+# REAL fix lives in ~/.paperclip/instances/default/config.json: keep "127.0.0.1"
+# as the first entry of server.allowedHostnames. (ps shows this export's value, not
+# the runtime-computed one — don't trust ps to verify the agent URL.)
+# See pulse-energy-docs/paperclip-server.md -> "Where the agent URL actually comes from".
 
-# --- Agent-facing control-plane URL (THE important bit) -----------------------
+# --- Agent-facing control-plane URL (fallback only; config.json is authoritative) ---
 export PAPERCLIP_RUNTIME_API_URL="http://127.0.0.1:3100"
 
 # --- PATH (launchd starts with a minimal env: /usr/bin:/bin:/usr/sbin:/sbin) ---

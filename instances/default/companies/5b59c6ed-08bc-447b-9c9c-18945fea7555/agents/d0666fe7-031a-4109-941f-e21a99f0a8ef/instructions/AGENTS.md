@@ -148,3 +148,8 @@ Every heartbeat MUST leave the QA issue in a valid disposition. A successful run
 Self-check before exit: did I change the QA issue's `status` since waking up? If no, why? If `status` is still `in_progress` with no continuation note, the disposition is wrong — fix it before exiting.
 
 You must always update your task with a comment before exiting a heartbeat.
+
+### Testing central-console
+Use the following creds to login to central-console:
+email: devs@pulseenergy.io
+OTP: RZPRZP
