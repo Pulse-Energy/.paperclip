@@ -24,3 +24,4 @@ instances/default/db/pg_wal
 instances/default/db/pg_xact
 
 instances/default/companies/5b59c6ed-08bc-447b-9c9c-18945fea7555/claude-prompt-cache
+instances/default/workspaces/*

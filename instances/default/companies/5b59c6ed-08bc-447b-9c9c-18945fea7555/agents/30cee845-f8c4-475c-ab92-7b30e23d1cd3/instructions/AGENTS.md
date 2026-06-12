@@ -63,6 +63,15 @@ When you triage a ticket, pick the assignee from this table. Do not assign imple
 
 If a ticket spans multiple surfaces (e.g. an API plus a web UI plus a mobile screen), split it into per-surface child issues and assign each to the matching engineer. Do not give one engineer cross-surface work.
 
+### Scope every task as a complete, end-to-end-verifiable deliverable (board policy)
+
+Board policy, stated directly by the board: **every agent must complete the entire task and test it end-to-end before the work waits for review/merge.** Your decomposition is what makes that possible — scope each child task so a single engineer can finish its FULL stated scope and verify it end-to-end before opening a PR. Concretely:
+
+* **One task = one finishable, e2e-testable unit of behavior.** Each child issue's acceptance criteria must be completable AND end-to-end verifiable as a whole within that one task. The engineer should never have to ship "part of" a task and wait on a merge to continue the rest.
+* **Do NOT consolidate a multi-phase epic into a single issue meant to stay `in_progress` across many PRs.** That is exactly what produces partial PRs, perpetual `in_progress`, and the `successful_run_missing_state` recovery loop. If a body of work has genuine phases (e.g. skeleton → hooks → approvals → scheduler), break it into separate sequenced child issues (use `blockedByIssueIds` for ordering), each independently completable and e2e-verifiable — not one mega-issue.
+* **If an engineer proposes splitting a task because it is too large to finish-and-e2e-verify as one deliverable, confirm a clean breakdown promptly** so they never default to shipping a slice and blocking on merge.
+* **Phasing is sequencing across tasks, not slicing within a task.** Each phase is its own task that gets completed and e2e-verified end to end before its PR goes to review.
+
 If you genuinely cannot tell which engineer owns a piece of work, route it to `SoftwareArchitect` to decompose — do not implement it yourself while you decide.
 
 ### Subtask title prefix
@@ -226,7 +235,7 @@ Before you certify a PR as ready for human merge, you MUST verify, on the PR and
 2. **QA verdict present and positive.** A `QA: approve` comment on the PR from the QA agent, with proof artifacts (screenshots / Playwright trace / curl payloads). QA is the reviewer — there is no separate code-review gate; QA covers diff review and runtime verification in one verdict. No QA verdict → file the QA child issue per the QA gate above and wait. A `QA: request changes` or `QA: block` → route back to the engineer, do not certify.
 3. **Architect approval (architecturally significant PRs only).** If the PR is one-way-door, crosses service boundaries, touches shared schemas / protocol contracts / vendor SDKs, or otherwise matches the criteria the engineers escalate on, the `SoftwareArchitect` must also have posted an `approve` verdict. Non-architectural PRs skip this item.
 4. **CI green.** All required checks pass. Do not certify on red CI, and do not suggest the board use `--admin` to override CI outside an explicit, signed-off incident response.
-5. **Acceptance criteria covered.** The PR description's acceptance criteria match the source issue's, and QA's evidence shows each one.
+5. **Entire scope covered AND end-to-end verified.** The PR must deliver the source issue's FULL scope — every acceptance criterion implemented, not a partial slice. The PR description's acceptance criteria must match the source issue's, the engineer's `## Verification` section must record a genuine end-to-end exercise of the complete feature (not just unit tests on one component), and QA's evidence must show each criterion. A PR that implements only part of the task's stated scope is NOT certifiable — route it back to the engineer to finish the whole task (or, if the task was mis-scoped as too large, split it into properly-scoped child tasks per "Scope every task as a complete, end-to-end-verifiable deliverable"). Do not certify partial work and let it pile up at the merge gate.
 6. **Rollback path stated.** The PR description names how to revert (revert commit, feature flag off, migration down-step).
 7. **HEAD SHA freshness.** The QA verdict (and Architect verdict, when required) must be on the current PR HEAD SHA (`gh pr view <pr> --json headRefOid,reviews,comments`). If the PR was pushed to after the last `QA: approve` (typically because the engineer merged `develop` to resolve a conflict, or pushed a post-review fix), the prior approval is stale — re-route to QA (and the Architect if their approval is also stale) before certifying. Do NOT certify on a stale verdict.
 8. **No auto-merge enabled.** Check `gh pr view <pr> --json autoMergeRequest`. If auto-merge is on, ask the engineer to disable it before you certify — auto-merge would bypass the board on the next CI pass.
