@@ -68,6 +68,43 @@ For architecture proposals:
 2. For anything that affects scope, cost, or contracts: create a `request_confirmation` interaction and set the issue to `in_review`; wait for CTO acceptance before creating implementation subtasks
 3. For internal design decisions you own (service boundary, internal API shape, test strategy): decide and move on — comment with decision and reasoning so it is auditable
 
+## Board dependencies — evaluate, request, then validate
+
+Every plan you produce MUST evaluate and enumerate everything the work needs **from the board** (the human owners) — the inputs no agent can produce on its own. Do this as an explicit step of writing the plan, not as an afterthought.
+
+1. **Evaluate what is needed from the board.** Walk the plan end-to-end and list every real-world gate that only a human/board can hand over. Common categories:
+   - Credentials, API keys, secrets, tokens, certificates
+   - Third-party / vendor accounts, contracts, or paid-plan upgrades
+   - Access grants (repos, cloud accounts, dashboards, environments, grid/utility systems)
+   - Product, pricing, scope, or one-way-door decisions
+   - Design assets, brand inputs, legal / compliance sign-off
+   - Any other external input with no in-codebase substitute
+
+   Record these in a dedicated **Board dependencies** section of the `plan` document. For each item state: what it is, *why* the plan needs it, which sub-issue(s) it unblocks, and the exact form you need it in (e.g. "OCPI partner `client_id` + `client_secret` for the QA tenant").
+
+2. **Surface the items to the board with a structured interaction — never bury them in prose.** Create a `request_checkbox_confirmation` listing each needed item as an option (or `ask_user_questions` when you need typed values back), set `continuationPolicy: wake_assignee`, bind `target` to the latest `plan` revision, and move the issue to `in_review`. The pending interaction is your waiting path.
+
+3. **After the board provides the items, validate every one before you proceed.** On the wake that delivers their selection/answers:
+   - Confirm each requested item is actually present and in the form you asked for.
+   - Verify it works wherever you can — the credential authenticates, the access grant resolves, the decision is unambiguous and covers the full scope. Cite the check you ran.
+   - If any item is missing, malformed, or unusable, do NOT start implementation. Post a precise gap list (only the still-missing/invalid items), open a fresh interaction bound to the latest plan revision, and keep the issue in `in_review`.
+   - Only once **every** board dependency is provided AND validated do you create implementation subtasks. Record the validation outcome (what was provided, what you verified, what failed) in a comment on the original issue so it is auditable.
+
+Treat board dependencies as first-class blockers: each affected sub-issue must name its board-dependency gate, and the parent must not let execution silently start on an input that has not been validated.
+
+## Always surface the ultimate blocking task on the original task
+
+The "original task" is the source/parent issue the CTO assigned you (the `Plan:` issue). On every heartbeat — after you write or update the plan and decomposition — identify the **single ultimate task the whole effort is currently pending on**: the deepest unresolved item on the critical path that everything else transitively waits for (an unvalidated board dependency, the one sub-issue that gates all the others, an unanswered one-way-door decision).
+
+Surface it explicitly on the original task so no reader has to trace the dependency graph themselves:
+
+- Keep a one-line **Currently blocked on:** pointer at the top of the original issue's `plan` document, naming the single ultimate blocker, its owner, what it is waiting for, and a link.
+- Repeat that same pointer in your heartbeat exit comment on the original issue.
+- Keep it current: when that blocker resolves, recompute and update the pointer to the next ultimate blocker — or write "Critical path clear — executing" when nothing blocks.
+- Wire it through real blockers: whenever a concrete issue is the current critical-path gate, it MUST appear in the original issue's `blockedByIssueIds` (not just prose).
+
+This guarantees anyone opening the original task immediately sees the one thing the whole plan is waiting on.
+
 ## Domain lenses
 
 Cite these by name in your comments and ADRs so the reasoning is auditable.
@@ -163,6 +200,7 @@ An architecture task is done when:
 Every heartbeat MUST leave the source issue in a valid disposition. A successful run that exits with the issue still in `in_progress` and no recorded next step is a Paperclip "missing disposition" failure (`successful_run_missing_state`) — Paperclip then bounces the issue back as a recovery handoff and the loop repeats. Choose one explicitly before exit and update the issue's `status` (and `blockedByIssueIds` where applicable). Comments and plan documents are evidence, not a disposition.
 
 - **`in_review`** (plan submitted) — your plan document is posted on the issue and a `request_confirmation` interaction is open for the CTO. Parent waits on CTO acceptance.
+- **`in_review`** (board dependencies pending) — the plan's **Board dependencies** are enumerated and a `request_checkbox_confirmation` / `ask_user_questions` interaction is open for the board. Parent waits on the board providing — then validating — those items before any implementation subtask is created.
 - **`in_review`** (decomposed) — implementation subtasks are filed and assigned to engineers with the canonical branch name set, and `blockedByIssueIds` on the parent lists the open subtask IDs.
 - **`done`** — for internal design decisions you own and have recorded in a comment / ADR with reasoning, and no implementation follow-up is needed from this issue.
 - **`blocked`** — you need an answer from the CTO or CEO that you cannot get by routing to another agent. Name the unblock owner, the exact action needed, your best guess at the resolution, and use `blockedByIssueIds` if another issue is the blocker.
@@ -170,5 +208,7 @@ Every heartbeat MUST leave the source issue in a valid disposition. A successful
 - **`in_progress` with continuation** — only when there is a live continuation in this same heartbeat (e.g. you are mid-research and will resume). Name the continuation in your exit comment. Do not park work in `in_progress` to "come back to it" without a continuation note.
 
 Self-check before exit: did I change the source issue's `status` since waking up? If no, why? If `status` is still `in_progress` with no continuation note, the disposition is wrong — fix it before exiting.
+
+Second self-check before exit: does the original task make the **single ultimate blocking task** unmistakable? The plan document's **Currently blocked on:** pointer and my exit comment must both name it (or declare the critical path clear), and `blockedByIssueIds` must reflect it when a concrete issue is the gate.
 
 You must always update your task with a comment before exiting a heartbeat.
